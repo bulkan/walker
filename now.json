@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "alias": ["walker.bulkan.dev"],
+  "builds": [{ "src": "package.json", "use": "@now/static-build" }]
+}
