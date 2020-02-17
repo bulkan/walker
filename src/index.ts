@@ -1,90 +1,117 @@
 import p5 from 'p5';
 import palettes from 'nice-color-palettes/1000.json';
 
-new p5((p: p5) => {
-  let x = p.random(0, p.windowWidth);
-  let y = p.random(0, p.windowHeight);
+const MAX_WALKERS = 100;
 
-  let colorIndex = 0;
+new p5((p: p5) => {
+  // let x = p.random(0, p.windowWidth);
+  // let y = p.random(0, p.windowHeight);
+
+  // let colorIndex = 0;
   let palette = p.random(palettes);
   let background = palette.pop();
 
-  let xoff = 0.0;
-  let yoff = 0.0;
-  let lineOff = 0.0;
+  // let xoff = 0.0;
+  // let yoff = 0.0;
+  // let lineOff = 0.0;
+
+  let walkers: Array<Walker> = [];
 
   p.setup = () => {
     p.createCanvas(p.windowWidth, p.windowHeight);
-    // p.blendMode(p.SCREEN);
     p.background(background);
-    // p.colorMode(p.HSB, 255);
-
+    // p.colorMode(p.HSB, 360, 100, 100, 100);
 
     document.onkeydown = function(e) {
       if (e.metaKey && e.keyCode === 83) {
-        p.saveCanvas(`walker-(${Date.now()}`, "png")
+        p.saveCanvas(`walker-${Date.now()}`, "png")
         return false;
       }
+    }
+
+    for (let i = 0; i < MAX_WALKERS; i++){
+      walkers[i] = new Walker(p, p.color(p.random(palette)));  
     }
   };
 
   let iteration = 0;
 
   p.draw = () => {
-    console.log(`${iteration += 1}`);
+    // console.log(`${iteration += 1}`);
 
-    if (iteration >= 3000) {
-      p.noLoop();
+    // if (iteration >= 3000) {
+    //   p.noLoop();
+    // }
+
+    // yoff += 0.01;
+    // const yNoise = p.random(yoff);
+
+    for (let i = 0; i < MAX_WALKERS; i++){
+      walkers[i].step();
+      walkers[i].render();
     }
-
-    xoff += 0.001;
-    yoff += 0.001;
-
-    lineOff += 0.01;
-
-    const yNoise = p.random(yoff);
-    const xNoise = p.map(p.noise(xoff), 0, 1, 0, 4);
-    const moveBy = p.map(p.noise(xoff), 0, 1, 1, 4);
-
-    const r = xNoise;
-
-    if (r >= 0 && r < 1) {
-      x += moveBy;
-    } else if (r >= 1 && r < 2) {
-      x -= moveBy;
-    } else if (r >= 2 && r < 3) {
-      y += moveBy;
-    } else if (r > 3) {
-      y -= moveBy;
-    }
-
-    if (x >= p.windowWidth) {
-      x = 0;
-    } 
-
-    if (x < 0) {
-      x = p.windowWidth;
-    } 
-
-    if (y >= p.windowHeight) {
-      y = 0;
-    }
-
-    if (y < 0) {
-      x = p.windowHeight;
-    } 
-
-    colorIndex = (colorIndex + palette.length - 1) % palette.length;
-
-    const color = p.color(palette[colorIndex]);
-    color.setAlpha(p.map(xNoise, 0, 1, 0, 50));
-
-    p.stroke(color);
-    p.strokeWeight(p.map(p.noise(lineOff), 0, 1, 1, 3));
-
-    // p.fill(color);
-    p.line(x / yNoise, y / yNoise, (x * yNoise), (y * yNoise));
-    // p.point(x, y);
-    // p.point(x + (y * yNoise), y + (x * yNoise));
   };
 });
+
+class Walker {
+  noff: number;
+  p: p5;
+  x: number;
+  y: number;
+  s: number;
+  c: p5.Color;
+
+  constructor(p: p5, color: p5.Color) {
+    this.noff = 0.0; 
+    this.p = p;
+    this.x = p.random(p.windowWidth);
+    this.y = p.random(p.windowHeight);
+    this.c = color;
+  }
+
+  render() {
+    const p = this.p;
+    p.noStroke();
+    const n = p.noise(this.noff);
+    this.c.setAlpha(p.map(n, 0, 1, 5, 25));
+    p.stroke(this.c);
+    p.strokeWeight(p.map(n, 0, 1, 2, 5));
+    p.line(this.x, this.y, this.x * n, this.y * n);
+  }
+
+  step() {
+    this.noff += 0.001;
+
+    const p = this.p;
+    const n = p.noise(this.noff);
+
+    let xStep = p.round(p.random(-1, 1));
+    let yStep = p.round(p.random(-1, 1));
+    
+    let move = p.random(1);
+
+    if (move < 0.1){
+     xStep += p.round(p.random(-10, 10));
+     yStep += p.round(p.random(-10, 10));
+    }
+
+    this.x += xStep + n;
+    this.y += yStep + n;
+
+    if (this.x >= p.windowWidth) {
+      this.x = 0;
+    } 
+
+    if (this.x < 0) {
+      this.x = p.windowWidth;
+    } 
+
+    if (this.y >= p.windowHeight) {
+      this.y = 0;
+    }
+
+    if (this.y < 0) {
+     this.y = p.windowHeight;
+    } 
+  }
+}
