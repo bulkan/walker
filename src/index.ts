@@ -4,17 +4,20 @@ import palettes from 'nice-color-palettes/1000.json';
 new p5((p: p5) => {
   let x = p.random(0, p.windowWidth);
   let y = p.random(0, p.windowHeight);
-  let palette = p.random(palettes);
+
   let colorIndex = 0;
+  let palette = p.random(palettes);
+  let background = palette.pop();
 
   let xoff = 0.0;
   let yoff = 0.0;
+  let lineOff = 0.0;
 
   p.setup = () => {
     p.createCanvas(p.windowWidth, p.windowHeight);
     // p.blendMode(p.SCREEN);
-    p.background("black");
-    p.colorMode(p.HSB, 255);
+    p.background(background);
+    // p.colorMode(p.HSB, 255);
 
 
     document.onkeydown = function(e) {
@@ -25,9 +28,19 @@ new p5((p: p5) => {
     }
   };
 
-  p.draw = () => {  
+  let iteration = 0;
+
+  p.draw = () => {
+    console.log(`${iteration += 1}`);
+
+    if (iteration >= 3000) {
+      p.noLoop();
+    }
+
     xoff += 0.001;
     yoff += 0.001;
+
+    lineOff += 0.01;
 
     const yNoise = p.random(yoff);
     const xNoise = p.map(p.noise(xoff), 0, 1, 0, 4);
@@ -64,20 +77,14 @@ new p5((p: p5) => {
     colorIndex = (colorIndex + palette.length - 1) % palette.length;
 
     const color = p.color(palette[colorIndex]);
-    // color.setAlpha(100);
     color.setAlpha(p.map(xNoise, 0, 1, 0, 50));
 
     p.stroke(color);
-    p.strokeWeight(p.map(yNoise, 0, 1, 1, 3));
+    p.strokeWeight(p.map(p.noise(lineOff), 0, 1, 1, 3));
 
     // p.fill(color);
-    p.line(x, y, (x * yNoise), (y * yNoise));
+    p.line(x / yNoise, y / yNoise, (x * yNoise), (y * yNoise));
     // p.point(x, y);
     // p.point(x + (y * yNoise), y + (x * yNoise));
   };
-
-  p.windowResized = () => {
-    p.resizeCanvas(p.windowWidth, p.windowHeight);
-    p.background("black");
-  }
 });
